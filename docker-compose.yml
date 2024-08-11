@@ -7,3 +7,12 @@ services:
       - ./:/app:delegated
     ports:
       - '20080:80'
+  mysql:
+    image: mysql:5.7
+    ports:
+      - 3306:3306
+    environment:
+      - MYSQL_ROOT_PASSWORD=verysecret
+      - MYSQL_DATABASE=yii2basic
+      - MYSQL_USER=yii2basic
+      - MYSQL_PASSWORD=secret
