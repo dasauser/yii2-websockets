@@ -14,6 +14,7 @@ use yii\web\ServerErrorHttpException;
 
 class ServerController extends Controller implements MessageComponentInterface
 {
+    /** @var int[] Чтобы не делать таблицу */
     const USERS = [
         'abcdefg' => 1,
         'hijklmn' => 2,
