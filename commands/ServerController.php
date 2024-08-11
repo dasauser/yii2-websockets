@@ -54,6 +54,7 @@ class ServerController extends Controller implements MessageComponentInterface
             throw new ServerErrorHttpException('can not open connection');
         }
 
+        $conn->send('connected');
         $this->clients->attach($conn, $connection);
     }
 
@@ -67,6 +68,7 @@ class ServerController extends Controller implements MessageComponentInterface
             throw new ServerErrorHttpException('can not close connection');
         }
         $this->clients->detach($conn);
+        $conn->send('connection closed');
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e)
