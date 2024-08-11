@@ -87,7 +87,7 @@ class ServerController extends Controller implements MessageComponentInterface
         $connection->setScenario(COnnection::SCENARIO_CLOSE);
 
         if ($connection->update() === false) {
-            $errors = $connection->getErrorSummary(true);
+            $errors = json_encode($connection->getErrorSummary(true));
             $conn->send($errors);
             throw new ServerErrorHttpException($errors);
         }
@@ -110,7 +110,7 @@ class ServerController extends Controller implements MessageComponentInterface
         ]);
 
         if (!$connection->save()) {
-            throw new ServerErrorHttpException($connection->getErrorSummary(true));
+            throw new ServerErrorHttpException(json_encode($connection->getErrorSummary(true)));
         }
 
         return $connection;
