@@ -81,20 +81,20 @@ class ServerController extends Controller implements MessageComponentInterface
 
     public function onClose(ConnectionInterface $conn)
     {
-        /** @var Connection $connection */
-        $connection = $this->clients->offsetGet($conn);
+        try {
+            /** @var Connection $connection */
+            $connection = $this->clients->offsetGet($conn);
+            $connection->setScenario(COnnection::SCENARIO_CLOSE);
 
-        $connection->setScenario(COnnection::SCENARIO_CLOSE);
+            if ($connection->update() === false) {
+                throw new ServerErrorHttpException(json_encode($connection->getErrorSummary(true)));
+            }
 
-        if ($connection->update() === false) {
-            $errors = json_encode($connection->getErrorSummary(true));
-            $conn->send($errors);
-            throw new ServerErrorHttpException($errors);
+            $this->clients->detach($conn);
+            $conn->send('connection closed');
+        } catch (\Throwable $exception) {
+            $conn->send($exception->getMessage());
         }
-
-        $this->clients->detach($conn);
-
-        $conn->send('connection closed');
     }
 
     private function auth(ConnectionInterface $conn, array $msg): Connection
