@@ -1,4 +1,4 @@
-var conn = new WebSocket('ws://localhost:21080?token=invalidToken');
+var conn = new WebSocket('ws://localhost:21080?token=validToken');
 conn.onopen = function(e) {
     console.log("Connection established!");
 };
@@ -6,3 +6,7 @@ conn.onopen = function(e) {
 conn.onmessage = function(e) {
     console.log(e.data);
 };
+
+conn.onclose = function(e) {
+    console.log('closing connection...');
+}

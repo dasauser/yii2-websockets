@@ -2,6 +2,7 @@
 
 namespace app\commands;
 
+use app\models\Connection;
 use Psr\Log\LogLevel;
 use Ratchet\ConnectionInterface;
 use Ratchet\Http\HttpServer;
@@ -9,6 +10,7 @@ use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
 use Ratchet\WebSocket\WsServer;
 use yii\console\Controller;
+use yii\web\ServerErrorHttpException;
 
 class ServerController extends Controller implements MessageComponentInterface
 {
@@ -28,19 +30,42 @@ class ServerController extends Controller implements MessageComponentInterface
 
     public function onOpen(ConnectionInterface $conn)
     {
-        $this->clients->attach($conn);
         $params = [];
         parse_str($conn->httpRequest->getUri()->getQuery(), $params);
         $token = $params['token'] ?? null;
+
         if ($token !== 'validToken') {
             $conn->send('Invalid token');
             $conn->close();
+            return;
         }
+
+        $userAgent = 'someagent';
+        $userId = 1;
+        $connection = new Connection([
+            'scenario' => Connection::SCENARIO_OPEN,
+            'token' => $token,
+            'user_agent' => $userAgent,
+            'user_id' => $userId,
+        ]);
+        if (!$connection->save()) {
+            $conn->send('can not open connection');
+            $conn->close();
+            throw new ServerErrorHttpException('can not open connection');
+        }
+
+        $this->clients->attach($conn, $connection);
     }
 
     public function onClose(ConnectionInterface $conn)
     {
-        // The connection is closed, remove it, as we can no longer send it messages
+        /** @var Connection $connection */
+        $connection = $this->clients->offsetGet($conn);
+        $connection->setScenario(COnnection::SCENARIO_CLOSE);
+        if ($connection->update() === false) {
+            $conn->send('can not close connection');
+            throw new ServerErrorHttpException('can not close connection');
+        }
         $this->clients->detach($conn);
     }
 
@@ -58,7 +83,6 @@ class ServerController extends Controller implements MessageComponentInterface
 
         foreach ($this->clients as $client) {
             if ($from !== $client) {
-                // The sender is not the receiver, send to each client connected
                 $client->send($msg);
             }
         }
