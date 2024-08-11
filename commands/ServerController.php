@@ -126,9 +126,10 @@ class ServerController extends Controller implements MessageComponentInterface
         return self::USERS[$token] ?? null;
     }
 
-    private function isAuthMsg(array $decodedMsg): bool
+    private function isAuthMsg(mixed $decodedMsg): bool
     {
-        return count($decodedMsg) === 2
+        return is_array($decodedMsg)
+            && count($decodedMsg) === 2
             && isset($decodedMsg['type'])
             && $decodedMsg['type'] === 'auth'
             && isset($decodedMsg['token'])
