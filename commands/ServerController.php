@@ -30,8 +30,11 @@ class ServerController extends Controller implements MessageComponentInterface
 
     public function onOpen(ConnectionInterface $conn)
     {
+        /** @var \Psr\Http\Message\RequestInterface $httpRequest */
+        $httpRequest = $conn->httpRequest;
+
         $params = [];
-        parse_str($conn->httpRequest->getUri()->getQuery(), $params);
+        parse_str($httpRequest->getUri()->getQuery(), $params);
         $token = $params['token'] ?? null;
 
         if ($token !== 'validToken') {
@@ -40,14 +43,15 @@ class ServerController extends Controller implements MessageComponentInterface
             return;
         }
 
-        $userAgent = 'someagent';
         $userId = 1;
+
         $connection = new Connection([
             'scenario' => Connection::SCENARIO_OPEN,
             'token' => $token,
-            'user_agent' => $userAgent,
+            'user_agent' => $httpRequest->getHeader('User-Agent'),
             'user_id' => $userId,
         ]);
+
         if (!$connection->save()) {
             $conn->send('can not open connection');
             $conn->close();
