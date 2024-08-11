@@ -14,6 +14,13 @@ use yii\web\ServerErrorHttpException;
 
 class ServerController extends Controller implements MessageComponentInterface
 {
+    const USERS = [
+        'abcdefg' => 1,
+        'hijklmn' => 2,
+        'opqrstu' => 3,
+        'vwxyz01' => 4,
+        '2345678' => 5,
+    ];
     private \SplObjectStorage $clients;
 
     public function __construct($id, $module, $config = [])
@@ -80,8 +87,9 @@ class ServerController extends Controller implements MessageComponentInterface
         $connection->setScenario(COnnection::SCENARIO_CLOSE);
 
         if ($connection->update() === false) {
-            $conn->send('can not close connection');
-            throw new ServerErrorHttpException('can not close connection');
+            $errors = $connection->getErrorSummary(true);
+            $conn->send($errors);
+            throw new ServerErrorHttpException($errors);
         }
 
         $this->clients->detach($conn);
@@ -98,11 +106,11 @@ class ServerController extends Controller implements MessageComponentInterface
             'scenario' => Connection::SCENARIO_OPEN,
             'token' => $msg['token'],
             'user_agent' => $httpRequest->getHeader('User-Agent')[0] ?? null,
-            'user_id' => $this->getUserId($msg['token']),
+            'user_id' => $this?->getUserId($msg['token']),
         ]);
 
         if (!$connection->save()) {
-            throw new ServerErrorHttpException('can not open connection');
+            throw new ServerErrorHttpException($connection->getErrorSummary(true));
         }
 
         return $connection;
@@ -111,10 +119,10 @@ class ServerController extends Controller implements MessageComponentInterface
     /**
      * @return mixed
      */
-    public function getUserId(string $token): mixed
+    public function getUserId(string $token): ?int
     {
         // поиск юзера по токену.
-        return 1;
+        return self::USERS[$token] ?? null;
     }
 
     private function isAuthMsg(array $decodedMsg): bool
