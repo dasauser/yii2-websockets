@@ -4,8 +4,10 @@ namespace app\commands;
 
 use daemons\Chat;
 use Ratchet\ConnectionInterface;
+use Ratchet\Http\HttpServer;
 use Ratchet\MessageComponentInterface;
 use Ratchet\Server\IoServer;
+use Ratchet\WebSocket\WsServer;
 use yii\console\Controller;
 
 class ServerController extends Controller implements MessageComponentInterface
@@ -20,7 +22,7 @@ class ServerController extends Controller implements MessageComponentInterface
 
     public function actionStart(int $port = 21080)
     {
-        $server = IoServer::factory($this, $port);
+        $server = IoServer::factory(new HttpServer(new WsServer($this)), $port);
         $server->run();
     }
 
