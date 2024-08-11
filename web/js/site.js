@@ -1,4 +1,4 @@
-var conn = new WebSocket('ws://localhost:21080');
+var conn = new WebSocket('ws://localhost:21080?token=invalidToken');
 conn.onopen = function(e) {
     console.log("Connection established!");
 };
