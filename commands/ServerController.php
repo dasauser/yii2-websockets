@@ -2,7 +2,7 @@
 
 namespace app\commands;
 
-use daemons\Chat;
+use Psr\Log\LogLevel;
 use Ratchet\ConnectionInterface;
 use Ratchet\Http\HttpServer;
 use Ratchet\MessageComponentInterface;
@@ -29,21 +29,24 @@ class ServerController extends Controller implements MessageComponentInterface
     public function onOpen(ConnectionInterface $conn)
     {
         $this->clients->attach($conn);
-        echo "New connection! ({$conn->resourceId})\n";
+        $params = [];
+        parse_str($conn->httpRequest->getUri()->getQuery(), $params);
+        $token = $params['token'] ?? null;
+        if ($token !== 'validToken') {
+            $conn->send('Invalid token');
+            $conn->close();
+        }
     }
 
     public function onClose(ConnectionInterface $conn)
     {
         // The connection is closed, remove it, as we can no longer send it messages
         $this->clients->detach($conn);
-
-        echo "Connection {$conn->resourceId} has disconnected\n";
     }
 
     public function onError(ConnectionInterface $conn, \Exception $e)
     {
-        echo "An error has occurred: {$e->getMessage()}\n";
-
+        \Yii::getLogger()->log($e->getMessage(), LogLevel::ERROR);
         $conn->close();
     }
 
