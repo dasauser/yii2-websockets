@@ -37,7 +37,8 @@ class Connection extends ActiveRecord
     public function rules()
     {
         return [
-            [['user_id', 'token'], 'required'],
+            [['token'], 'required'],
+            [['user_id'], 'required', 'message' => 'User with provided token not found'],
             [['user_id'], 'integer', 'min' => 1],
             [['token', 'user_agent'], 'string', 'max' => 255],
             [['opened_at', 'closed_at'], 'datetime'],
